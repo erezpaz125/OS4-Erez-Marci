@@ -11,3 +11,4 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       70000  // size of file system in blocks, changed from 1000 to 70000 to support double indirect
 #define MAXPATH      128   // maximum file path name
+#define MAX_DEREFERENCE 31 //maximum # of soft link dereferences

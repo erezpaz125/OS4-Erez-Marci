@@ -26,6 +26,8 @@
 // only one device
 struct superblock sb; 
 
+
+
 // Read the super block.
 static void
 readsb(int dev, struct superblock *sb)
@@ -717,4 +719,56 @@ struct inode*
 nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
+}
+
+int
+symlink(const char* old_path, const char* new_path){
+  struct inode* dp;
+  char name[DIRSIZ];
+  if((dp = nameiparent((char*)new_path, name)) == 0){
+    return -1;
+  }
+  ilock(dp);
+  struct inode* ip;
+  uint off;
+  if((ip = dirlookup(dp, name, &off)) != 0){
+    iunlockput(dp);
+    return -1;
+  }
+  begin_op();
+  if((ip = ialloc(dp->dev, T_SLINK)) == 0)
+    panic("create: ialloc");
+  ilock(ip);
+  ip->major = 0;
+  ip->minor = 0;
+  ip->nlink = 1;
+  iupdate(ip);
+  writei(ip, 0, (uint64)old_path, 0, strlen(old_path)+1);
+  if(dirlink(dp, name, ip->inum) < 0)
+    panic("create: dirlink");
+  iunlockput(dp);
+  iunlock(ip);
+  end_op();
+  return 0;
+}
+
+int
+readlink(const char* pathname, char* buf, int bufsize){
+  char name[DIRSIZ];
+  int ans;
+  struct inode* ip = namex((char*)(pathname), 0, name);
+  if(!ip){
+    return -1;
+  }
+  ilock(ip);
+  if(ip->type != T_SLINK){
+    iunlock(ip);
+    ans = -1;
+  }
+  else{
+    readi(ip, 1, (uint64)buf, 0, bufsize);
+    ans = 0;
+  }
+  iunlock(ip);
+  return ans;
 }

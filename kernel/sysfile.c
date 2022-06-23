@@ -416,8 +416,8 @@ sys_chdir(void)
 uint64
 sys_symlink(void)
 {
-  const char *oldpath;
-  const char *newpath;
+  char oldpath[MAXPATH];
+  char newpath[MAXPATH];
 
   if(argstr(0, oldpath, MAXPATH) < 0)
     return -1;
@@ -429,8 +429,8 @@ sys_symlink(void)
 uint64
 sys_readlink(void)
 {
-  const char *pathname;
-  char *buf;
+  char pathname[MAXPATH];
+  char buf[MAXPATH];
   int bufsize;
 
   if(argstr(0, pathname, MAXPATH) < 0)
