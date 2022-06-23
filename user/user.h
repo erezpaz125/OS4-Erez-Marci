@@ -17,7 +17,7 @@ int unlink(const char*);
 int fstat(int fd, struct stat*);
 int link(const char*, const char*);
 int symlink(const char*, const char*);
-int readlink(const char*, char*, int);
+int readlink(const char*, uint64, int);
 int mkdir(const char*);
 int chdir(const char*);
 int dup(int);

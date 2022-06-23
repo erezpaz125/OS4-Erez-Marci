@@ -18,7 +18,7 @@ int main(int argc, char** argv){
     printf("newpath: %s\n", argv[2]);
     symlink(argv[1], argv[2]);
     printf("symlink has been created!\n");
-    readlink(argv[2], buf, MAXPATH);
+    readlink(argv[2], (uint64)buf, MAXPATH);
     printf("symlink content: %s\n", buf);
     exit(0);
 }

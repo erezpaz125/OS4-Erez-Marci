@@ -755,7 +755,7 @@ symlink(const char* old_path, const char* new_path){
 }
 
 int
-readlink(const char* pathname, char* buf, int bufsize){
+readlink(const char* pathname, uint64 buf, int bufsize){
   char name[DIRSIZ];
   int ans;
   struct inode* ip = namex((char*)(pathname), 0, name);

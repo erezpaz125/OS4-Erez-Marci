@@ -430,12 +430,12 @@ uint64
 sys_readlink(void)
 {
   char pathname[MAXPATH];
-  char buf[MAXPATH];
+  uint64 buf;
   int bufsize;
 
   if(argstr(0, pathname, MAXPATH) < 0)
     return -1;
-  if(argstr(1, buf, MAXPATH) < 0)
+  if(argaddr(1, &buf) < 0)
     return -1;
   if(argint(2, &bufsize) < 0)
     return -1;  
