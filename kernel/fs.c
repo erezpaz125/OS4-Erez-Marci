@@ -726,12 +726,14 @@ symlink(const char* old_path, const char* new_path){
   struct inode* dp;
   char name[DIRSIZ];
   if((dp = nameiparent((char*)new_path, name)) == 0){
+    printf("did i get here? line 729 fs.c\n");
     return -1;
   }
   ilock(dp);
   struct inode* ip;
   uint off;
   if((ip = dirlookup(dp, name, &off)) != 0){
+    printf("did i get here? line 736 fs.c\n");
     iunlockput(dp);
     return -1;
   }

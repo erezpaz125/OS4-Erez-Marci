@@ -129,7 +129,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_readlink]  sys_symlink,
+[SYS_symlink]  sys_symlink,
 [SYS_readlink]  sys_readlink
 };
 
@@ -140,6 +140,7 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
+  //printf("NELEM - %d, syscalls[num] - %p\n", NELEM(syscalls), syscalls[num]);
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
