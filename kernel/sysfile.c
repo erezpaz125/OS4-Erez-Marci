@@ -412,6 +412,37 @@ sys_chdir(void)
   return 0;
 }
 
+
+uint64
+sys_symlink(void)
+{
+  const char *oldpath;
+  const char *newpath;
+
+  if(argstr(0, oldpath, MAXPATH) < 0)
+    return -1;
+  if(argstr(1, newpath, MAXPATH) < 0)
+    return -1;
+  return symlink(oldpath, newpath);
+}
+
+uint64
+sys_readlink(void)
+{
+  const char *pathname;
+  char *buf;
+  int bufsize;
+
+  if(argstr(0, pathname, MAXPATH) < 0)
+    return -1;
+  if(argstr(1, buf, MAXPATH) < 0)
+    return -1;
+  if(argint(2, &bufsize) < 0)
+    return -1;  
+  return readlink(pathname, buf, bufsize);
+}
+
+
 uint64
 sys_exec(void)
 {

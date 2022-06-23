@@ -25,17 +25,19 @@ struct superblock {
 #define FSMAGIC 0x10203040
 
 #define NDIRECT 12
-#define NINDIRECT (BSIZE / sizeof(uint))
-#define MAXFILE (NDIRECT + NINDIRECT)
+#define NINDIRECT (BSIZE / sizeof(uint)) // 1024 / 4 = 256
+#define NDINDIRECT (NINDIRECT * NINDIRECT) // 256^2
+#define MAXFILE (NDIRECT + NINDIRECT + NDINDIRECT) // ADD HERE + NUMBER OF BLOCKS IN DOUBLE INDIRECT = 256^2
 
 // On-disk inode structure
-struct dinode {
+struct dinode {   // we need to add 16 uints = 64 bytes for it to be a divisor of 1024
   short type;           // File type
   short major;          // Major device number (T_DEVICE only)
   short minor;          // Minor device number (T_DEVICE only)
   short nlink;          // Number of links to inode in file system
   uint size;            // Size of file (bytes)
-  uint addrs[NDIRECT+1];   // Data block addresses
+  uint addrs[NDIRECT+1+1];   // Data block addresses
+  uint padding[15];     // to complete struct size into a total of 128 bytes
 };
 
 // Inodes per block.
