@@ -25,7 +25,7 @@ fmtname(char *path)
 void
 ls(char *path)
 {
-  char buf[512], *p;
+  char buf[512], *p, buf2[512];
   int fd;
   struct dirent de;
   struct stat st;
@@ -63,8 +63,18 @@ ls(char *path)
         printf("ls: cannot stat %s\n", buf);
         continue;
       }
+      if (st.type == T_SLINK)
+      {
+        readlink(buf, (uint64)buf2, 128);
+        printf("%s->%s %d %d %l\n", fmtname(buf), buf2, st.type, st.ino, st.size);
+      }
+      else
       printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
     }
+    break;
+  case T_SLINK:
+    readlink(path, (uint64)buf2, 128);
+    printf("%s->%s %d %d %l\n", fmtname(path), buf2, st.type, st.ino, st.size);
     break;
   }
   close(fd);
