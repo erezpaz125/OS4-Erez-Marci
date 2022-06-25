@@ -26,7 +26,8 @@
 // only one device
 struct superblock sb; 
 
-
+struct inode*
+dereferencelink(struct inode* ip, int* dereference);
 
 // Read the super block.
 static void
@@ -674,7 +675,7 @@ skipelem(char *path, char *name)
 // path element into name, which must have room for DIRSIZ bytes.
 // Must be called inside a transaction since it calls iput().
 static struct inode*
-namex(char *path, int nameiparent, char *name)
+namex(char *path, int nameiparent, char *name, int ref_count)
 {
   struct inode *ip, *next;
 
@@ -685,6 +686,8 @@ namex(char *path, int nameiparent, char *name)
 
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
+     if(!(ip=dereferencelink(ip,&ref_count)))
+      return 0;
     if(ip->type != T_DIR){
       iunlockput(ip);
       return 0;
@@ -712,13 +715,13 @@ struct inode*
 namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name);
+  return namex(path, 0, name, MAX_DEREFERENCE);
 }
 
 struct inode*
 nameiparent(char *path, char *name)
 {
-  return namex(path, 1, name);
+  return namex(path, 1, name, MAX_DEREFERENCE);
 }
 
 int
@@ -726,14 +729,12 @@ symlink(const char* old_path, const char* new_path){
   struct inode* dp;
   char name[DIRSIZ];
   if((dp = nameiparent((char*)new_path, name)) == 0){
-    printf("did i get here? line 729 fs.c\n");
     return -1;
   }
   ilock(dp);
   struct inode* ip;
   uint off;
   if((ip = dirlookup(dp, name, &off)) != 0){
-    printf("did i get here? line 736 fs.c\n");
     iunlockput(dp);
     return -1;
   }
@@ -758,7 +759,7 @@ int
 readlink(const char* pathname, uint64 buf, int bufsize){
   char name[DIRSIZ];
   int ans;
-  struct inode* ip = namex((char*)(pathname), 0, name);
+  struct inode* ip = namex((char*)(pathname), 0, name, MAX_DEREFERENCE);
   if(!ip){
     return -1;
   }
@@ -772,5 +773,28 @@ readlink(const char* pathname, uint64 buf, int bufsize){
     ans = 0;
   }
   iunlock(ip);
+  return ans;
+}
+
+
+struct inode*
+dereferencelink(struct inode* ip, int* dereference){
+  struct inode* ans = ip;
+  char buffer[100];
+  char name[DIRSIZ];
+  while(ans->type == T_SLINK){
+    *dereference = *dereference - 1;
+    if(!(*dereference)){
+      iunlockput(ans);
+      return 0;
+    }
+    readi(ans, 0,(uint64)buffer, 0, ans->size);
+    iunlockput(ans);
+    ans = namex(buffer, 0, name, *dereference);
+    if(!ans){
+      return 0;
+    }
+    ilock(ans);
+  }
   return ans;
 }

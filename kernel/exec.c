@@ -7,6 +7,8 @@
 #include "defs.h"
 #include "elf.h"
 
+extern struct inode*
+dereferencelink(struct inode* ip, int* dereference);
 static int loadseg(pde_t *pgdir, uint64 addr, struct inode *ip, uint offset, uint sz);
 
 int
@@ -20,6 +22,7 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pagetable_t pagetable = 0, oldpagetable;
   struct proc *p = myproc();
+  int maxDereference = MAX_DEREFERENCE;
 
   begin_op();
 
@@ -28,6 +31,12 @@ exec(char *path, char **argv)
     return -1;
   }
   ilock(ip);
+
+  if(!(ip = dereferencelink(ip,&maxDereference))){
+    end_op();
+    printf("exec: fail\n");
+    return -1;
+  }
 
   // Check ELF header
   if(readi(ip, 0, (uint64)&elf, 0, sizeof(elf)) != sizeof(elf))

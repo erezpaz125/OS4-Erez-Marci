@@ -16,6 +16,9 @@
 #include "file.h"
 #include "fcntl.h"
 
+extern struct inode*
+dereferencelink(struct inode* ip, int* dereference);
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -291,6 +294,7 @@ sys_open(void)
   struct file *f;
   struct inode *ip;
   int n;
+  int maxDereference = MAX_DEREFERENCE;
 
   if((n = argstr(0, path, MAXPATH)) < 0 || argint(1, &omode) < 0)
     return -1;
@@ -309,9 +313,17 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
+
+    
+    if(ip->type == T_DIR && omode != O_RDONLY && omode != O_IGNORE_SLINK){
       iunlockput(ip);
       end_op();
+      return -1;
+    }
+  }
+
+  if (!(omode & O_IGNORE_SLINK)) {
+    if(!(ip = dereferencelink(ip,&maxDereference))){
       return -1;
     }
   }
@@ -393,13 +405,18 @@ sys_chdir(void)
   char path[MAXPATH];
   struct inode *ip;
   struct proc *p = myproc();
-  
+  int maxDereference = MAX_DEREFERENCE;
+
   begin_op();
   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
     end_op();
     return -1;
   }
   ilock(ip);
+  if(!(ip=dereferencelink(ip,&maxDereference))){
+    end_op();
+    return -1;
+  } 
   if(ip->type != T_DIR){
     iunlockput(ip);
     end_op();
